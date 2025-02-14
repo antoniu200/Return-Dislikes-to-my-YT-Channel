@@ -140,8 +140,7 @@ If the script **only fetches videos and checks dislikes** but **does NOT update 
 **However, this does NOT include comment updates!**  
 
 ---
-
-### Final Answer:  
+  
 | **Scenario** | **Videos Processed Per Day (10,000 Quota)** |  
 |-------------|--------------------------------|  
 | **Only checking dislikes, no updates** | **Up to 5,000** |  
