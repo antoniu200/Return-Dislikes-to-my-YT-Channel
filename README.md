@@ -151,5 +151,6 @@ If **some videos do not need updates**, you may process **more than 192 videos**
 
 Known issues:
 -------------------
+   - Does not pin comments (yet!)
    - You must use `Task Scheduler` (in Windows), or some other 3rd party form of automation to start the script automatically.
    - You tell me
