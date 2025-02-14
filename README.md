@@ -11,7 +11,7 @@ Steps to Use the Script:
    - Create OAuth 2.0 credentials and download the `client_secrets.json` file.
 
 2. **Install Dependencies**:
-   Install the required Python libraries: `pip install google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client`
+   - Install the required Python libraries: `pip install google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client`
    
 4. **Prepare the Script**:
    - Save the script in a file, e.g., `update_youtube_descriptions.py`.
@@ -54,7 +54,7 @@ How It Works (Step by Step)
    - The script looks for an existing comment **made by you.**
    - If found:
       - If the dislike count has changed (or has not yet been published), it **updates the comment** with:
-      - ```
+        ```
         Dislikes: 120  
         Updated (YY-MM-DD): 2024-02-14
         ```
@@ -64,7 +64,7 @@ How It Works (Step by Step)
 
 5. **Progress Tracking & Error Handling:**
    - The script **saves progress** after each video, so if it’s interrupted, it resumes where it left off.
-   - If **quota is exceeded,** it **tops gracefully** and lets you continue the next day.
+   - If **quota is exceeded,** it **exits gracefully** and lets you continue the next day.
    - **Errors are handled interactively** (retry, skip, or exit).
   
 Important Notes
@@ -93,47 +93,47 @@ YouTube’s API **quota limit** is **10,000 units per day**, and each API reques
 
 ### Estimated Video Processing Capacity  
 
-#### Case 1: Updating an Existing Comment  
+#### Case 1: Updating an existing comment  
 If the script **only updates existing comments** (no new comments needed), for each video it makes:  
 1. `search.list` (100) → **Once for all videos**  
 2. `videos.list` (1)  
 3. `commentThreads.list` (1)  
 4. `comments.update` (50)  
 
-**Total Cost per Video:** `1 + 1 + 50 = 52`  
+**Total cost per video:** `1 + 1 + 50 = 52`  
 
-**Videos Processed per Day:**  
+**Videos processed per day:**  
 ```
 10,000 ÷ 52 ≈ 192 videos/day
 ```
 
 ---
 
-#### Case 2: Creating a New Comment  
+#### Case 2: Creating a new comment  
 If the script **creates a new comment instead of updating**, for each video it makes:  
 1. `search.list` (100) → **Once for all videos**  
 2. `videos.list` (1)  
 3. `commentThreads.list` (1)  
 4. `commentThreads.insert` (50)  
 
-**Total Cost per Video:** `1 + 1 + 50 = 52`  
+**Total cost per video:** `1 + 1 + 50 = 52`  
 
-**Videos Processed per Day:**  
+**Videos processed per day:**  
 ```
 10,000 ÷ 52 ≈ 192 videos/day
 ```
 
 ---
 
-#### Case 3: Checking Videos But Not Updating Anything  
+#### Case 3: Checking videos, but not updating anything  
 If the script **only fetches videos and checks dislikes** but **does NOT update or create comments**, it makes:  
 1. `search.list` (100) → **Once for all videos**  
 2. `videos.list` (1)  
 3. `commentThreads.list` (1)  
 
-**Total Cost per Video:** `1 + 1 = 2`  
+**Total cost per video:** `1 + 1 = 2`  
 
-**Videos Processed per Day:**  
+**Videos processed per day:**  
 ```
 10,000 ÷ 2 = 5,000 videos/day
 ```
