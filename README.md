@@ -59,7 +59,7 @@ How It Works (Step by Step)
         Updated (YY-MM-DD): 2024-02-14
         ```
       - Previous content should be present below the comment **update date.**
-      - Otherwise, it **leaves the comment unchanged** to avoid unnecessary edits.
+      - Otherwise, if the dislike count is the same, it **leaves the comment unchanged** to avoid unnecessary edits.
    - If no comment exists, it **creates a new one.**
 
 5. **Progress Tracking & Error Handling:**
@@ -73,7 +73,7 @@ Important Notes
    - The script does not modify video titles, descriptions, or settings – it only updates comments.
    - Google API quotas apply – if you run into quota limits, wait 24 hours before trying again.
    - Videos where comments are disabled are skipped automatically.
-   - This script was mostly made written with immense help from AI. Tested for a couple of weeks, inspected and slightly modified code manually, some formatting has been done manually.
+   - This script was written with immense help from AI. Tested for a couple of weeks, inspected and slightly modified code manually. Some formatting has also been done manually.
 
 ### How Many Videos Can This Script Process in a Day?
 YouTube’s API **quota limit** is **10,000 units per day**, and each API request **costs a certain amount of quota**. 
