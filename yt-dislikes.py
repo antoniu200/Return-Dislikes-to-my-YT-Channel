@@ -52,10 +52,26 @@ def save_videos_to_remove(videos_to_remove):
         json.dump(list(videos_to_remove), file)
 
 def load_progress():
-    """Load the progress from a file."""
+    """Load the progress from a file. If the file is empty or contains invalid JSON, return an empty dict."""
     if os.path.exists('progress.json'):
         with open('progress.json', 'r') as file:
-            return json.load(file)
+            content = file.read().strip()
+
+        if not content:
+            try:
+                os.remove('progress.json')
+            except Exception as e:
+                print(f"Could not erase progress.json. Please attempt to do so manually.\n {e}")
+            return {}
+
+        try:
+            return json.loads(content)
+        except json.JSONDecodeError:
+            try:
+                os.remove('progress.json')
+            except Exception as e:
+                print(f"Could not erase progress.json. Please attempt to do so manually.\n {e}")
+            return {}
     return {}
 
 def save_progress(last_video_id):
@@ -296,6 +312,7 @@ def get_videos(youtube):
             new_video_count = int(input("How many new videos have been uploaded since the last run? "))
 
             # Fetch only the new videos based on user input
+            page_token = None  # Start with no page token
             while new_video_count > 0:
                 # Fetch the next batch of videos (adjust maxResults based on new_video_count)
                 request = youtube.search().list(
@@ -303,7 +320,7 @@ def get_videos(youtube):
                     forMine=True,
                     type='video',
                     maxResults=min(new_video_count, 50),
-                    pageToken=request.pageToken if 'pageToken' in request else None
+                    pageToken=page_token  # Use the correct pagination token
                 )
 
                 response = request.execute()
@@ -331,13 +348,20 @@ def get_videos(youtube):
 
                         # Save progress immediately after processing each video
                         with open(cache_file, 'w') as file:
-                            json.dump(cached_videos + current_videos, file)
+                            json.dump(current_videos + cached_videos, file)
 
                     # If we have reached the most recent cached video, stop fetching
                     elif video_id in cached_video_ids:
                         print("Encountered cached video. Stopping API requests.")
                         new_video_count = 0
                         break
+                # Get the nextPageToken for pagination
+                page_token = response.get("nextPageToken", None)
+                if not page_token:
+                    break  # Stop looping if there are no more pages
+
+            # After fetching new videos, update the cache list to be new videos prepended to the old ones.
+            current_videos = current_videos + cached_videos
 
         else:
             print("No new videos uploaded since the last run.")
@@ -346,14 +370,16 @@ def get_videos(youtube):
     else:
         print("No cached videos found. Fetching all videos from scratch.")
         # Proceed normally if there was no cached list
-        request = youtube.search().list(
-            part='id,snippet',
-            forMine=True,
-            type='video',
-            maxResults=50
-        )
+        page_token = None
+        while True:
+            request = youtube.search().list(
+                part='id,snippet',
+                forMine=True,
+                type='video',
+                maxResults=50,
+                pageToken=page_token
+            )
 
-        while request:
             response = request.execute()
             for item in response.get('items', []):
                 video_id = item['id']['videoId']
@@ -369,10 +395,15 @@ def get_videos(youtube):
                         'id': video_id,
                         'title': item['snippet']['title']
                     })
+
             # Save progress after each API request
             with open(cache_file, 'w') as file:
                 json.dump(current_videos, file)
-            request = youtube.search().list_next(request, response)
+
+            # Get the nextPageToken for pagination
+            page_token = response.get("nextPageToken", None)
+            if not page_token:
+                break  # Stop looping if there are no more pages
 
     # Save updated list of videos to cache if there are new ones
     if current_videos and current_videos != cached_videos:
@@ -387,7 +418,7 @@ def main():
     try:
         youtube = authenticate()
 
-        # Fetch videos (this already loads cached videos from get_videos)
+        # Fetch videos (this also loads cached videos from get_videos)
         videos = get_videos(youtube)
 
         # Load progress
@@ -425,6 +456,9 @@ def main():
                 if "commentsDisabled" in str(e):
                     print(f"Comments disabled. Marking video {video_id} for removal.")
                     # Mark this video for removal by its index
+                    videos_to_remove.add(index)
+                elif "videoNotFound" in str(e):
+                    print(f"Video deleted. Marking video {video_id} for removal.")
                     videos_to_remove.add(index)
                 else:
                     raise e
