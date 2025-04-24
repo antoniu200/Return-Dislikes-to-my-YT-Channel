@@ -262,7 +262,7 @@ def find_or_create_comment(youtube, video_id, dislike_count):
                 return comment_id
 
         # If no matching comment, create a new one
-        new_comment_text = f"{intended_dislike_line}\n{intended_date_line}"
+        new_comment_text = f"{intended_dislike_line}\n"
         return create_comment(youtube, video_id, new_comment_text)
 
     except HttpError as e:
