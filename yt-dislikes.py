@@ -41,15 +41,28 @@ def save_channel_owner_id(channel_owner_id):
 
 # Function to load videos marked for removal from a file
 def load_videos_to_remove():
-    if os.path.exists('videos_to_remove.json'):
-        with open('videos_to_remove.json', 'r') as file:
-            return set(json.load(file))  # Convert the list back to a set
-    return set()
+    """Read back all indices from the JSON-Lines file into a set."""
+    if not os.path.exists('videos_to_remove.json'):
+        return set()
+    remove_set = set()
+    with open('videos_to_remove.json', 'r') as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                idx = json.loads(line)
+                remove_set.add(idx)
+            except json.JSONDecodeError:
+                # Skip malformed lines
+                continue
+    return remove_set
 
 # Function to save videos marked for removal to a file
-def save_videos_to_remove(videos_to_remove):
+def add_video_to_remove(index):
+    """Append a single video_id to a JSON-lines file."""
     with open('videos_to_remove.json', 'w') as file:
-        json.dump(list(videos_to_remove), file)
+        file.write(json.dumps(index) + "\n")
 
 def load_progress():
     """Load the progress from a file. If the file is empty or contains invalid JSON, return an empty dict."""
@@ -120,8 +133,12 @@ def get_dislike_count(youtube, video_id):
             id=video_id
         ).execute()
 
+        if not response.get("items"):
+            return "videoNotFound"  # sentinel to trigger removal logic
+        
         stats = response['items'][0]['statistics']
         return int(stats.get('dislikeCount', 0))
+    
     except HttpError as e:
         result = handle_http_error(e)
         if result == 'retry':
@@ -426,9 +443,6 @@ def main():
         last_video_id = progress.get("last_video_id")
         start_processing = last_video_id is None
 
-        # Load the videos to remove set from the previous run
-        videos_to_remove = load_videos_to_remove()
-
         # Track video indices to be removed from the list
         videos_to_remove = set()
 
@@ -445,7 +459,11 @@ def main():
 
             # Get the dislike count for the video
             dislike_count = get_dislike_count(youtube, video_id)
-            if dislike_count is None:
+            if dislike_count == "videoNotFound":
+                print(f"Video deleted. Marking video {video_id} for removal.")
+                add_video_to_remove(index) # Mark this video for removal by its index
+                continue
+            elif dislike_count is None:
                 print(f"Skipping video {title} due to error.")
                 continue
 
@@ -455,11 +473,10 @@ def main():
             except HttpError as e:
                 if "commentsDisabled" in str(e):
                     print(f"Comments disabled. Marking video {video_id} for removal.")
-                    # Mark this video for removal by its index
-                    videos_to_remove.add(index)
+                    add_video_to_remove(index)
                 elif "videoNotFound" in str(e):
                     print(f"Video deleted. Marking video {video_id} for removal.")
-                    videos_to_remove.add(index)
+                    add_video_to_remove(index)
                 else:
                     raise e
 
@@ -472,7 +489,11 @@ def main():
                     os.remove('progress.json')
                     print(f"\nAll videos have been processed! Progress has been reset.")
 
-        # Remove marked videos from the videos list by iterating in reverse
+        videos_to_remove = load_videos_to_remove()
+
+        # Remove marked videos from the videos list by iterating in reverse.
+        # Because we use indices to locate them.
+        # Also most efficient for large sets.
         for index in range(len(videos) - 1, -1, -1):  # From len-1 to 0 (inclusive)
             if index in videos_to_remove:
                 videos.pop(index)
@@ -483,9 +504,6 @@ def main():
             json.dump(videos, file)
 
         print("Updated cache saved successfully.")
-
-        # Save the videos marked for removal to the file
-        save_videos_to_remove(videos_to_remove)
 
     except HttpError as e:
         result = handle_http_error(e)
