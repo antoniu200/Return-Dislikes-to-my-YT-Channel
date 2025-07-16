@@ -154,5 +154,3 @@ Known issues:
    - Does not pin comments (yet!)
    - You must use `Task Scheduler` (in Windows), or some other 3rd party form of automation to start the script automatically.
    - You tell me
-
-<meta name="google-site-verification" content="DPB2N3-mWMwMsELGXhyho_nxi3EcPQG1bs4m7tIoOSY" />
