@@ -502,7 +502,8 @@ def main():
         cache_file = 'videos_cache.json'
         with open(cache_file, 'w') as file:
             json.dump(videos, file)
-
+            
+        open('videos_to_remove.json', 'w').close() # Clears videos_to_remove cache
         print("Updated cache saved successfully.")
 
     except HttpError as e:
