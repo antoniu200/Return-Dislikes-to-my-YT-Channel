@@ -31,7 +31,7 @@ Who Is This Script For?
 -------------------
 If you:
    - Own a YouTube channel
-   - Want to display dislike counts in a pinned comment
+   - Want to display dislike counts in an automated comment
    - Want a semi-automatic solution (you must run the script manually)
 
 Then this script could be your solution.
