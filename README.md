@@ -13,8 +13,8 @@ Steps to Use the Script:
 2. **Install Dependencies**:
    - Install the required Python libraries: `pip install google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client`
    
-4. **Prepare the Script**:
-   - Save the script in a file, e.g., `update_youtube_descriptions.py`.
+3. **Prepare the Script**:
+   - Download `yt-dislikes.py`.
    - Rename and place your `client_secrets.json` file in the same directory as the script.
 
 What does this script do?
