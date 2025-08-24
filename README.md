@@ -153,4 +153,5 @@ Known issues:
 -------------------
    - Does not pin comments (yet!)
    - You must use `Task Scheduler` (in Windows), or some other 3rd party form of automation to start the script automatically.
+   - 1% chance that it creates a new comment when not needed
    - You tell me
